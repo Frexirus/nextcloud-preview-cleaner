@@ -10,7 +10,7 @@ $key = 'TqLHu47GZVGIFor4'; //Ключ входа
 
 require_once __DIR__ . '/config/config.php'; //Подключение конфига некстклауда
 
-$pdo = new PDO('pgsql:host=$CONFIG['dbhost'];dbname='.$CONFIG['dbname'],$CONFIG['dbuser'],$CONFIG['dbpassword']);
+$pdo = new PDO('pgsql:host=localhost;dbname='.$CONFIG['dbname'],$CONFIG['dbuser'],$CONFIG['dbpassword']);
 //Список всех строк по столбцу fileid
 $sql = "SELECT fileid FROM oc_filecache";
 foreach ($pdo->query($sql) as $row) {
