@@ -1,7 +1,7 @@
 <?php
 //Не забудте установить на данный скрипт привилегии выполнения от имени вебсервера
 //Добавление задачи -> crontab -e -u www-data
-//*  */12  *  *  * php -f /var/www/nextcloud/filecache-preview-clean.php > /dev/null 2>&1
+//*  */12  *  *  * php -f /var/www/nextcloud/cleaner.php > /dev/null 2>&1
 //*  */12  *  *  * php -f /var/www/nextcloud/occ files:scan-app-data > /dev/null 2>&1
 
 $key = 'TqLHu47GZVGIFor4'; //Ключ входа
