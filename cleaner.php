@@ -4,31 +4,32 @@ https://github.com/Frexirus/nextcloud-preview-cleaner
 */
 
 require_once __DIR__ . '/config/config.php'; //Подключение конфига некстклауда
-
+//Подключение к базе данных
 $pdo = new PDO('pgsql:host='.$CONFIG['dbhost'].';dbname='.$CONFIG['dbname'],$CONFIG['dbuser'],$CONFIG['dbpassword']);
-//Список строк связанных с изображениями по столбцу fileid
+//Поиск всех fileid изображений вне превью
 $sql = "SELECT fileid FROM oc_filecache WHERE path NOT LIKE '%preview%' AND mimepart = 3";
 foreach ($pdo->query($sql) as $row) {
 	$column_fileid_users_images[]=$row['fileid'];
 }
-//Поиск парентов изображений в папке превью
+//Поиск всех parent изображений в превью
 $sql = "SELECT parent FROM oc_filecache WHERE path LIKE '%preview%' AND mimepart = 3";
 foreach ($pdo->query($sql) as $row) {
-	$column_name_preview_parents[]=$row['parent'];
+	$column_parent_preview_images[]=$row['parent'];
 }
-$column_name_preview_parents = array_values(array_unique($column_name_preview_parents));
-for ($i = 0; $i <= count($column_name_preview_parents)-1; $i++) {
-	$sql = "SELECT name FROM oc_filecache WHERE fileid = $column_name_preview_parents[$i]";
+//Отбираем только уникальные parent
+$column_parent_preview_images = array_values(array_unique($column_parent_preview_images));
+//Поиск имён папок превью в соответствии с parent изображений превью
+for ($i = 0; $i <= count($column_parent_preview_images)-1; $i++) {
+	$sql = "SELECT name FROM oc_filecache WHERE fileid = $column_parent_preview_images[$i]";
 	foreach ($pdo->query($sql) as $row) {
-		$column_fileid_preview_images[]=$row['name'];
+		$column_name_preview_images[]=$row['name'];
 	}
 }
-//Сравнение списков и удаление из него используемых превью
-$column_fileid_preview_unused_images = array_values(array_diff($column_fileid_preview_images,$column_fileid_users_images));
-
-//Собираем пути и паренты неиспользуемого кэша
-for ($i = 0; $i <= count($column_fileid_preview_unused_images)-1; $i++) {
-	$sql = "SELECT fileid,path,parent FROM oc_filecache WHERE name = '$column_fileid_preview_unused_images[$i]' AND mimepart = 1";
+//Сравнение списков, удаление из него используемых превью и сборка списка неиспользуемых превью
+$unused_previews = array_values(array_diff($column_name_preview_images,$column_fileid_users_images));
+//Собираем пути и паренты неиспользуемых превью
+for ($i = 0; $i <= count($unused_previews)-1; $i++) {
+	$sql = "SELECT fileid,path,parent FROM oc_filecache WHERE name = '$unused_previews[$i]' AND mimepart = 1";
 	foreach ($pdo->query($sql) as $row) {
 		$column_fileid_unused_rows[]=$row['fileid'];
 		$column_path_unused_rows[]=$row['path'];
@@ -57,4 +58,6 @@ foreach ($column_path_unused_rows as $i=>$row) {
 		}
 	}
 }
+//Если нечего удалять, то выводим сообщение об этом
+if (count($column_path_unused_rows) == 0) echo "NOTHING TO DELETE...";
 ?>
